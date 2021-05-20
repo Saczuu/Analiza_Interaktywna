@@ -19,10 +19,11 @@ library(gganimate)
 library(zoo)
 library(keras)
 library(ggridges)
+library(RColorBrewer)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
-
+    
     output$timeSeriesPlot <- renderPlot({
         
         dane <- mydata()
@@ -33,17 +34,18 @@ shinyServer(function(input, output) {
         dane$Hour <- format(strptime(temp, format="%H%M"), format = "%H:%M")
         dane$Timestamp <- paste(dane$Data, dane$Hour)
         dane$Timestamp <- as.POSIXct(dane$Timestamp, format="%Y-%m-%d %H:%M") 
-    
+        
         ### filtrowanie która data ma zostać wyświetlona
         dane <- dane[(dane$Data  == input$inDate),]
         
-
+        
         ggplot(data=dane,aes(x=Timestamp, y=Energy)) + 
-            geom_path(colour="blue") + 
+            geom_path(colour="#2c7fb8") + 
             ylab("Produkcja") +
             xlab("Data")+
-            theme_ipsum()
-        })
+            theme_ipsum()+
+            scale_fill_brewer(palette="YlGnBu")
+    })
     
     mydata <- reactive({
         ### Wczytanie danychz pliku csv
@@ -62,7 +64,7 @@ shinyServer(function(input, output) {
     })
     
     model <- reactive({
-        mdl <- load_model_tf("model")
+        mdl <- load_model_tf("./model")
         return(mdl)
     })
     
@@ -120,8 +122,12 @@ shinyServer(function(input, output) {
         if (input$histo_atrib == "Wilgotność") {
             plot <- ggplot(dane, aes(x=Humidity))
         }
-        plot + geom_histogram(fill="#69b3a2", color="#e9ecef", alpha=0.9) +
-            theme_ipsum()
+        
+        plot +
+            geom_histogram(fill="#41b6c4", alpha=0.9, bins=input$histogramBins,) +
+            theme_ipsum() +
+            scale_color_brewer(palette="Dark2")+
+            scale_fill_brewer(palette="Dark2")
     })
     
     output$histogram <- renderPlot({
@@ -132,15 +138,12 @@ shinyServer(function(input, output) {
     output$cloudAggregatedHistogram <- renderPlot({
         dane <- mydata()
         dane <- select(dane, "Datestamp","Cloud")
-        
-        
-        
         aggregated <- dane %>% group_by(Date=floor_date(Datestamp, "week")) %>%
             summarize(Cloud=mean(Cloud)) 
         
         aggregated %>% ggplot( aes(x=Date, y=Cloud)) +
             geom_line( color="grey") +
-            geom_point(shape=21, color="black", fill="#69b3a2", size=6) +
+            geom_point(shape=21, color="black", fill="#7fcdbb", size=3) +
             theme_ipsum() +
             ggtitle("Średnie tygodniowe zachmurzenie")
         
@@ -160,9 +163,9 @@ shinyServer(function(input, output) {
             geom_point(aes(x=Date, y=Temp_min), shape=21, color="black", fill="#54A3FF", size=3) +
             theme_ipsum() +
             ggtitle("Największa i najmniejsza temperatura w agregacji tygodniowej")
-            
-           # geom_point(shape=21, color="black", fill="#FF5F4C", size=3) +
-            #    geom_point(shape=21, color="black", fill="#54A3FF", size=3)
+        
+        # geom_point(shape=21, color="black", fill="#FF5F4C", size=3) +
+        #    geom_point(shape=21, color="black", fill="#54A3FF", size=3)
     })
     
     output$humidityRidgelinePlot <- renderPlot({
@@ -208,7 +211,7 @@ shinyServer(function(input, output) {
                 inherit.aes = TRUE,
                 show.legend = FALSE
             )+
-            scale_fill_brewer(palette=12) +
+            scale_fill_brewer(palette="YlGnBu") +
             coord_polar(theta="y") +
             xlim(c(2, 4)) +
             theme_void()
@@ -223,13 +226,15 @@ shinyServer(function(input, output) {
         
         dane_grupowane$Month <- format(dane_grupowane$month,"%b")
         
-        ggplot(dane_grupowane, aes(x=as.factor(Month), y=Precip)) + 
-            geom_boxplot(fill="#e9ecef", alpha=0.2) + 
+        ggplot(dane_grupowane, aes(x=as.factor(Month), y=Precip, fill=as.factor(Month))) + 
+            geom_boxplot(alpha=0.8) + 
             xlab("Miesiąc")+
             ylab("Opady atmosferyczne")+
             theme_ipsum() +
             ggtitle("Opady atmosferyczne zgrupowane miesięcznie")+
-            scale_y_continuous(expand = c(0,3))
+            scale_y_continuous(expand = c(0,3))+
+            scale_fill_brewer(palette="YlGnBu")+
+            theme(legend.position="none")
     })
     
     output$modelSummary <- renderPrint({
@@ -265,11 +270,11 @@ shinyServer(function(input, output) {
             dane$Cloud = atrybuty$Cloud 
             p <- p +
                 geom_bar(aes(x=Timestamp, y=(dane$Cloud*max(dane$True_production)/100)),
-                              stat="identity", fill="gray",
-                              alpha = 3/10)
+                         stat="identity", fill="gray",
+                         alpha = 3/10)
             if (input$textCheckBox == TRUE) {
                 p <- p +
-                    geom_text(aes(label=dane$Cloud, x=Timestamp, y=(dane$Cloud*max(dane$True_production)/100)), colour="black")
+                    geom_text(aes(label=dane$Cloud, x=Timestamp, y=(dane$Cloud*max(dane$True_production)/100)*1.02), colour="black")
             }
         }
         if (2 %in% input$atributGroup) {
@@ -285,7 +290,7 @@ shinyServer(function(input, output) {
             
             if (input$uvcheckBox == TRUE) {
                 p <- p +
-                    geom_text(aes(label=dane$UV, x=Timestamp, y=(dane$UV*max(dane$True_production)/10)), colour="brown")
+                    geom_text(aes(label=dane$UV, x=Timestamp, y=(dane$UV*max(dane$True_production)/10)+50), colour="brown")
             }
         }
         
