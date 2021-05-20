@@ -9,16 +9,8 @@
 
 library(shiny)
 library(ggplot2)
-library(lubridate)
 library(tidyverse)
-library(stringr)
-library(hrbrthemes)
-library(dplyr)
-library(xts)
-library(gganimate)
-library(zoo)
 library(keras)
-library(ggridges)
 library(RColorBrewer)
 
 # Define server logic required to draw a histogram
