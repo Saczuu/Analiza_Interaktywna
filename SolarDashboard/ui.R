@@ -154,11 +154,14 @@ shinyUI(fluidPage(
    ),
    
    fluidRow(
+       style = "text-align: justify;",
        column(3,
               h5("Humidity")),
        column(9,
-              p("Ciśnienie atmosferyczne"),
-              plotOutput("humidityRidgelinePlot")
+              p("Wilgotność powietrza"),
+              plotOutput("humidityRidgelinePlot"),
+              p("Z uwagi na klimat w którym znajduje się Polska, można zauważyć że w ciągu
+                roku poziom wilgotności powietrza oscyluje głównie w okolicy 80.")
        )
        
    ),
@@ -176,12 +179,6 @@ shinyUI(fluidPage(
                na następne n zadanych godzin.
                  Model został stworzony w środowisku programistycznym TensorFlow Keras,
                  a zastosowana technika sieci neuonowych to rekurencyjne sieci neuronowe LSTM."))
-    ),
-    
-    fluidRow(
-        column(1, p(" ")),
-        column(10, 
-               verbatimTextOutput("modelSummary"))
     ),
     
     fluidRow(

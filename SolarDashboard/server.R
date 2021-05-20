@@ -15,7 +15,6 @@ library(stringr)
 library(hrbrthemes)
 library(dplyr)
 library(xts)
-library(gganimate)
 library(zoo)
 library(keras)
 library(ggridges)
@@ -64,7 +63,7 @@ shinyServer(function(input, output) {
     })
     
     model <- reactive({
-        mdl <- load_model_tf("model")
+        mdl <- load_model_tf("./model")
         return(mdl)
     })
     
