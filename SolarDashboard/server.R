@@ -64,7 +64,7 @@ shinyServer(function(input, output) {
     })
     
     model <- reactive({
-        mdl <- load_model_tf("./model")
+        mdl <- load_model_tf("model")
         return(mdl)
     })
     
